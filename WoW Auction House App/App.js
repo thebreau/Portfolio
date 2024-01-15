@@ -59,7 +59,7 @@ export default function App() {
   );
 
   // Blizzard API credentials
-  const clientId = "9de927a97fed4bfa9f3cb65b27f14bc4";
+  const clientId = "9de927a97fed4bfa9f3cb65b27f14bc4"; // credentials are no longer valid, normally would not place sensitive information directly in code.
   const clientSecret = "RUUVNjdSQFB6MH5jI7DeKUVoRJ48nVPs";
 
   // State hooks for auction data, filtering, and auction house selection
