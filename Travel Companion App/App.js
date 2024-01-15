@@ -79,7 +79,7 @@ export default function App() {
 
   // Function to fetch points of interest (POIs) from Google Places API
   const fetchPOIs = async (latitude, longitude, type) => {
-    const apiKey = "AIzaSyD-rAlywAaoHswuuR2V-v9F4Jt278AiTEA";
+    const apiKey = "AIzaSyD-rAlywAaoHswuuR2V-v9F4Jt278AiTEA"; // API key deleted. Sensitive data would not normally be included in code.
     const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=5000&type=${type}&key=${apiKey}`;
 
     try {
