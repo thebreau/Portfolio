@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  dashmachine:
+    image: rmountjoy/dashmachine:latest
+    container_name: dashmachine
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      proxy:
+        ipv4_address: 172.18.0.12
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Toronto
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /home/$USER/docker/dashmachine/data:/dashmachine/dashmachine/user_data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashmachine.entrypoints=http"
+      - "traefik.http.routers.dashmachine.rule=Host(`dashboard.$DOMAINNAME`)"
+      - "traefik.http.middlewares.dashmachine-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.dashmachine.middlewares=dashmachine-https-redirect"
+      - "traefik.http.routers.dashmachine-secure.entrypoints=https"
+      - "traefik.http.routers.dashmachine-secure.rule=Host(`dashboard.$DOMAINNAME`)"
+      - "traefik.http.routers.dashmachine-secure.tls=true"
+      - "traefik.http.routers.dashmachine-secure.service=dashmachine"
+      - "traefik.http.services.dashmachine.loadbalancer.server.port=5000"
+      - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true

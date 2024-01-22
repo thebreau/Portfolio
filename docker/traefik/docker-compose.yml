@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: no
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      proxy:
+         ipv4_address: 172.18.0.2
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - CF_API_EMAIL=$EMAIL # had to revert temoporarily to direct email and api token instead of using sectrets after moving to new setup
+      - CF_DNS_API_TOKEN=$TOKEN
+      #- CF_API_EMAIL_FILE=/run/secrets/cloudflare_email
+      #- CF_DNS_API_TOKEN_FILE=/run/secrets/cloudflare_dns_api_token
+      #- CF_API_KEY=cf_api_key
+      # be sure to use the correct one depending on if you are using a token or key
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DOCKERDIR}/traefik/data/traefik.yml:/traefik.yml:ro
+      - ${DOCKERDIR}/traefik/data/acme.json:/acme.json
+      - ${DOCKERDIR}/traefik/data/config.yml:/config.yml:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAINNAME}`)"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=ethan:${BASICAUTH_HASH}"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.${DOMAINNAME}`)"
+      - "traefik.http.routers.traefik-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main=${DOMAINNAME}"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.${DOMAINNAME}"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+      #- "traefik.http.routers.traefik-secure.middlewares=authelia@docker" # had to disable 
+    # secrets:
+    #   - cloudflare_email
+    #   - cloudflare_dns_api_token
+
+networks:
+  proxy:
+    external: true
+
+# secrets:
+#   cloudflare_email:
+#     file: $SECRETSDIR/cloudflare_email
+#   cloudflare_dns_api_token:
+#     file: $SECRETSDIR/cloudflare_dns_api_token
+
+# acme.jason has to be chmod 600, docker.sock has to be accessible by user, therefore requires user permissions, need to be able to call docker compose without sudo
+
+
+
+

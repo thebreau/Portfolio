@@ -1,0 +1,35 @@
+version: "3"
+
+services:
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud
+    container_name: nextcloud
+    restart: unless-stopped
+    networks:
+      proxy:
+        ipv4_address: 172.18.0.10
+    ports:
+      - 9001:443
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Toronto
+    volumes:
+      - /home/$USER/docker/nextcloud/config:/config
+      - /home/$USER/docker/nextcloud/data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.entrypoints=http"
+      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.$DOMAINNAME`)"
+      - "traefik.http.middlewares.nextcloud-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.nextcloud.middlewares=nextcloud-https-redirect"
+      - "traefik.http.routers.nextcloud-secure.entrypoints=https"
+      - "traefik.http.routers.nextcloud-secure.rule=Host(`nextcloud.$DOMAINNAME`)"
+      - "traefik.http.routers.nextcloud-secure.tls=true"
+      - "traefik.http.routers.nextcloud-secure.service=nextcloud"
+      - "traefik.http.services.nextcloud.loadbalancer.server.port=9001"
+      - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true
